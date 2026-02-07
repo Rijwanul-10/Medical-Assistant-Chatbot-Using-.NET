@@ -1,0 +1,524 @@
+@{
+    ViewData["Title"] = "Payment";
+    var appointment = ViewBag.Appointment as MedicalAssistant.Models.Appointment;
+    var publishableKey = ViewBag.PublishableKey as string;
+}
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        background-size: 200% 200%;
+        animation: gradientFlow 8s ease infinite;
+        min-height: 100vh;
+        padding: 30px 15px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    @@keyframes gradientFlow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    .payment-container {
+        max-width: 550px;
+        margin: 0 auto;
+        animation: slideInDown 0.6s ease-out;
+    }
+    
+    @@keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .payment-card {
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(15px);
+        border-radius: 30px;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    .payment-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .payment-header::before {
+        content: '';
+        position: absolute;
+        top: -100px;
+        right: -100px;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    
+    .payment-header h4 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        position: relative;
+        z-index: 1;
+        letter-spacing: 1px;
+    }
+    
+    .payment-header .icon {
+        font-size: 3rem;
+        margin-bottom: 10px;
+        display: block;
+        position: relative;
+        z-index: 1;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @@keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .payment-body {
+        padding: 30px;
+    }
+    
+    .appointment-details {
+        background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.1);
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .appointment-details h5 {
+        color: #667eea;
+        font-weight: 700;
+        margin-bottom: 20px;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .appointment-details h5::before {
+        content: '📋';
+        font-size: 1.5rem;
+    }
+    
+    .detail-item {
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-item:hover {
+        padding-left: 10px;
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 8px;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: #555;
+        font-size: 0.95rem;
+    }
+    
+    .detail-value {
+        color: #333;
+        font-weight: 500;
+        text-align: right;
+    }
+    
+    .amount-highlight {
+        color: #667eea;
+        font-size: 1.3rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    #payment-element {
+        margin: 25px 0;
+        padding: 20px;
+        background: #f8f9ff;
+        border-radius: 15px;
+        border: 2px solid rgba(102, 126, 234, 0.1);
+        transition: all 0.3s ease;
+        min-height: 200px;
+    }
+    
+    #payment-element:focus-within {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    
+    #payment-message {
+        border-radius: 15px;
+        padding: 15px 20px;
+        margin: 20px 0;
+        font-weight: 500;
+        animation: slideInUp 0.4s ease-out;
+        display: none;
+    }
+    
+    #payment-message.show {
+        display: block;
+    }
+    
+    @@keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .submit-button {
+        width: 100%;
+        padding: 18px 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        margin-top: 20px;
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        pointer-events: auto !important;
+    }
+    
+    .submit-button::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    
+    .submit-button:hover::before {
+        width: 400px;
+        height: 400px;
+    }
+    
+    .submit-button:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+    }
+    
+    .submit-button:active {
+        transform: translateY(-2px) scale(1.01);
+    }
+    
+    .submit-button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+        pointer-events: none;
+    }
+    
+    .submit-button.success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        box-shadow: 0 8px 25px rgba(17, 153, 142, 0.4);
+    }
+    
+    .error-alert {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin: 20px 0;
+        box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        animation: shake 0.5s ease-out;
+    }
+    
+    @@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+    
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+    
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+<div class="payment-container">
+    <div class="payment-card">
+        <div class="payment-header">
+            <i class="fas fa-credit-card icon"></i>
+            <h4>Complete Payment</h4>
+        </div>
+        <div class="payment-body">
+            @if (appointment != null)
+            {
+                <div class="appointment-details">
+                    <h5>Appointment Details</h5>
+                    <div class="detail-item">
+                        <span class="detail-label">👨‍⚕️ Doctor</span>
+                        <span class="detail-value">@appointment.Doctor?.DoctorName</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">🏥 Specialty</span>
+                        <span class="detail-value">@appointment.Doctor?.Speciality</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">📍 Chamber</span>
+                        <span class="detail-value">@appointment.Doctor?.Chamber</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">🌍 Location</span>
+                        <span class="detail-value">@appointment.Doctor?.Location</span>
+                    </div>
+                    <div class="detail-item" style="margin-top: 15px; padding-top: 20px; border-top: 2px solid rgba(102, 126, 234, 0.3);">
+                        <span class="detail-label" style="font-size: 1.1rem;">💰 Amount</span>
+                        <span class="amount-highlight">@appointment.Amount.ToString("F2") BDT</span>
+                    </div>
+                </div>
+                        
+                <div id="payment-message" role="alert"></div>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <p style="color: #666; margin-bottom: 20px;">Click the button below to proceed to secure payment</p>
+                    <button type="button" id="checkout-button" class="submit-button" onclick="handleCheckoutClick(event)">
+                        <span class="button-text">Pay @appointment.Amount.ToString("F2") BDT</span>
+                    </button>
+                </div>
+                
+                <input type="hidden" id="appointmentId" value="@appointment.Id" />
+            }
+            else
+            {
+                <div class="error-alert">
+                    <strong>⚠️ Error:</strong> Appointment not found. Please try booking again.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Global variables
+        let appointmentId;
+        let amount;
+        
+        // Global function for onclick attribute
+        window.handleCheckoutClick = async function(event) {
+            console.log('=== CHECKOUT BUTTON CLICKED (onclick) ===');
+            
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            await processCheckout();
+        };
+        
+        // Main checkout processing function
+        async function processCheckout() {
+            console.log('=== PROCESSING CHECKOUT ===');
+            
+            const checkoutButton = document.getElementById('checkout-button');
+            if (!checkoutButton) {
+                console.error('❌ Button not found');
+                alert('Payment button not found. Please refresh the page.');
+                return;
+            }
+            
+            if (checkoutButton.disabled) {
+                console.error('❌ Button is disabled');
+                return;
+            }
+            
+            const buttonText = checkoutButton.querySelector('.button-text');
+            if (!buttonText) {
+                console.error('❌ Button text not found');
+                return;
+            }
+            
+            checkoutButton.disabled = true;
+            buttonText.innerHTML = '<span class="loading-spinner"></span>Redirecting to Payment...';
+            
+            try {
+                console.log('Creating checkout session...');
+                console.log('Request data:', { amount: amount, appointmentId: appointmentId });
+                
+                // Create checkout session
+                const response = await fetch('/Payment/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: amount,
+                        appointmentId: appointmentId
+                    })
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch {
+                        errorData = { error: errorText || 'Failed to create checkout session' };
+                    }
+                    throw new Error(errorData.error || 'Failed to create checkout session');
+                }
+                
+                const data = await response.json();
+                console.log('Checkout session response:', data);
+                
+                if (!data || !data.url) {
+                    console.error('No URL in response:', data);
+                    throw new Error('No checkout URL received from server');
+                }
+                
+                console.log('✓ Checkout URL received:', data.url);
+                console.log('✓ Redirecting to Stripe Checkout in 500ms...');
+                
+                // Small delay to ensure button state updates
+                setTimeout(() => {
+                    console.log('Redirecting now...');
+                    window.location.href = data.url;
+                }, 500);
+                
+            } catch (error) {
+                console.error('❌ Error creating checkout session:', error);
+                console.error('Error details:', error.message, error.stack);
+                showMessage('Error: ' + error.message, 'danger');
+                checkoutButton.disabled = false;
+                if (buttonText) {
+                    buttonText.textContent = `Pay @appointment?.Amount.ToString("F2") BDT`;
+                }
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== PAYMENT PAGE LOADING ===');
+            
+            // Get appointment details
+            const appointmentIdInput = document.getElementById('appointmentId');
+            appointmentId = appointmentIdInput ? parseInt(appointmentIdInput.value) : 0;
+            amount = @(appointment?.Amount ?? 0);
+            
+            console.log('Appointment ID:', appointmentId);
+            console.log('Amount:', amount);
+            
+            // Validate inputs
+            if (!appointmentId || appointmentId <= 0) {
+                alert('Error: Invalid appointment. Please close this window and try booking again.');
+                const btn = document.getElementById('checkout-button');
+                if (btn) btn.disabled = true;
+                return;
+            }
+            
+            // Attach button click handler - multiple methods to ensure it works
+            const checkoutButton = document.getElementById('checkout-button');
+            if (checkoutButton) {
+                // Method 1: AddEventListener
+                checkoutButton.addEventListener('click', function(e) {
+                    console.log('✓ Button clicked via addEventListener');
+                    e.preventDefault();
+                    processCheckout();
+                });
+                
+                // Method 2: Test click detection
+                checkoutButton.addEventListener('click', function(e) {
+                    console.log('✓ Click event detected on button');
+                });
+                
+                console.log('✓ Checkout button event listeners attached');
+                console.log('Button element:', checkoutButton);
+                console.log('Button disabled?', checkoutButton.disabled);
+                console.log('Button onclick?', checkoutButton.onclick);
+            } else {
+                console.error('❌ Checkout button not found!');
+                alert('Payment button not found. Please refresh the page.');
+            }
+        });
+        
+        // Show message
+        function showMessage(message, type) {
+            const messageElement = document.getElementById('payment-message');
+            if (messageElement) {
+                messageElement.textContent = message;
+                messageElement.className = 'show';
+                
+                if (type === 'success') {
+                    messageElement.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
+                    messageElement.style.color = 'white';
+                } else if (type === 'danger') {
+                    messageElement.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)';
+                    messageElement.style.color = 'white';
+                } else {
+                    messageElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    messageElement.style.color = 'white';
+                }
+            }
+        }
+    </script>
+}

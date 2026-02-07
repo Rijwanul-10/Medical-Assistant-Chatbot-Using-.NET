@@ -1,0 +1,59 @@
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center">Login</h2>
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">Remember me</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+                <p class="mt-3 text-center">
+                    Don't have an account? <a asp-controller="Account" asp-action="Register">Register here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            const response = await fetch('/Account/Login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify({ email, password, rememberMe })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                window.location.href = result.redirectUrl || '/';
+            } else {
+                alert('Login failed: ' + (result.errors || 'Invalid credentials'));
+            }
+        });
+    </script>
+}
+

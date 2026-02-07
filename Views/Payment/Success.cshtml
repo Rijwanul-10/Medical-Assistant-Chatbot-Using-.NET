@@ -1,0 +1,158 @@
+@{
+    ViewData["Title"] = "Payment Success";
+    var appointment = ViewBag.Appointment as MedicalAssistant.Models.Appointment;
+    var success = ViewBag.Success as bool? ?? false;
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        min-height: 100vh;
+        padding: 30px 15px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .success-container {
+        max-width: 600px;
+        background: white;
+        border-radius: 30px;
+        padding: 40px;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        animation: slideInDown 0.6s ease-out;
+    }
+    
+    @@keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .success-icon {
+        font-size: 80px;
+        color: #38ef7d;
+        margin-bottom: 20px;
+        animation: scaleIn 0.5s ease-out;
+    }
+    
+    @@keyframes scaleIn {
+        from {
+            transform: scale(0);
+        }
+        to {
+            transform: scale(1);
+        }
+    }
+    
+    h1 {
+        color: #11998e;
+        margin-bottom: 20px;
+    }
+    
+    .appointment-info {
+        background: #f8f9ff;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 25px 0;
+        text-align: left;
+    }
+    
+    .info-item {
+        padding: 10px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #666;
+    }
+    
+    .info-value {
+        color: #333;
+        margin-top: 5px;
+    }
+    
+    .btn-home {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        padding: 15px 40px;
+        border: none;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 20px;
+        text-decoration: none;
+        display: inline-block;
+        transition: transform 0.3s ease;
+    }
+    
+    .btn-home:hover {
+        transform: translateY(-3px);
+    }
+</style>
+
+<div class="success-container">
+    <div class="success-icon">✅</div>
+    <h1>Payment Successful!</h1>
+    
+    @if (success && appointment != null)
+    {
+        <p style="color: #666; font-size: 1.1rem; margin-bottom: 30px;">
+            Your appointment has been confirmed. Thank you for your payment!
+        </p>
+        
+        <div class="appointment-info">
+            <h3 style="color: #11998e; margin-bottom: 20px;">Appointment Details</h3>
+            
+            <div class="info-item">
+                <div class="info-label">👨‍⚕️ Doctor</div>
+                <div class="info-value">@appointment.Doctor?.DoctorName</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">🏥 Specialty</div>
+                <div class="info-value">@appointment.Doctor?.Speciality</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">📅 Appointment Date</div>
+                <div class="info-value">@appointment.AppointmentDate.ToString("dddd, MMMM dd, yyyy 'at' h:mm tt")</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">📍 Location</div>
+                <div class="info-value">@appointment.Doctor?.Chamber</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">💰 Amount Paid</div>
+                <div class="info-value" style="color: #11998e; font-weight: 700; font-size: 1.2rem;">
+                    @appointment.Amount.ToString("F2") BDT
+                </div>
+            </div>
+        </div>
+        
+        <p style="color: #666; margin-top: 20px;">
+            A confirmation message has been sent to your chat. We wish you a speedy recovery! 💙
+        </p>
+    }
+    else
+    {
+        <p style="color: #666;">There was an issue processing your payment. Please contact support.</p>
+    }
+    
+    <a href="/Home" class="btn-home">Return to Chat</a>
+</div>

@@ -1,0 +1,1390 @@
+@{
+    ViewData["Title"] = "Doctor Koi?";
+}
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+        min-height: 100vh;
+        padding: 20px 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    @@keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    .chatbot-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .chat-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 25px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .chat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+    }
+    
+    .chat-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px 30px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .chat-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 3s ease-in-out infinite;
+    }
+    
+    @@keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    .chat-header h3 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        position: relative;
+        z-index: 1;
+        letter-spacing: 1px;
+    }
+    
+    .chat-header p {
+        margin: 8px 0 0 0;
+        font-size: 1rem;
+        opacity: 0.95;
+        position: relative;
+        z-index: 1;
+        font-weight: 300;
+    }
+    
+    .auth-buttons {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        display: flex;
+        gap: 10px;
+    }
+    
+    .auth-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .auth-btn.login {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .auth-btn.register {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+    }
+    
+    .auth-btn.logout {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+    }
+    
+    .auth-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .user-info {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 15px 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .user-info span {
+        font-weight: 600;
+        color: #667eea;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+    }
+    
+    .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 450px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .modal-header {
+        text-align: center;
+        margin-bottom: 25px;
+    }
+    
+    .modal-header h2 {
+        margin: 0;
+        color: #667eea;
+        font-size: 1.8rem;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 600;
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .modal-btn {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 10px;
+    }
+    
+    .modal-btn.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .modal-btn.secondary {
+        background: #f0f0f0;
+        color: #666;
+    }
+    
+    .modal-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .close-modal {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #999;
+    }
+    
+    .close-modal:hover {
+        color: #333;
+    }
+    
+    .error-message {
+        color: #ff6b6b;
+        font-size: 0.9rem;
+        margin-top: 10px;
+        padding: 10px;
+        background: #ffe0e0;
+        border-radius: 8px;
+        border-left: 4px solid #ff6b6b;
+        display: none;
+    }
+    
+    .success-message {
+        color: #11998e;
+        font-size: 0.9rem;
+        margin-top: 10px;
+        padding: 10px;
+        background: #e0fff0;
+        border-radius: 8px;
+        border-left: 4px solid #38ef7d;
+        display: none;
+        font-weight: 600;
+    }
+    
+    .chat-header .icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        display: block;
+        animation: heartbeat 2s ease-in-out infinite;
+        position: relative;
+        z-index: 1;
+    }
+    
+    @@keyframes heartbeat {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .chat-messages {
+        height: 550px;
+        overflow-y: auto;
+        padding: 25px;
+        background: linear-gradient(to bottom, #f8f9ff 0%, #ffffff 100%);
+        scroll-behavior: smooth;
+    }
+    
+    .chat-messages::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .chat-messages::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+    }
+    
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    }
+    
+    .welcome-message {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px 25px;
+        border-radius: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        animation: slideInLeft 0.5s ease-out;
+        border-left: 5px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    @@keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .user-message {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 20px 20px 5px 20px;
+        margin: 15px 0 15px 25%;
+        text-align: right;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        animation: slideInRight 0.4s ease-out;
+        word-wrap: break-word;
+        position: relative;
+    }
+    
+    .user-message::after {
+        content: '';
+        position: absolute;
+        right: -8px;
+        bottom: 10px;
+        width: 0;
+        height: 0;
+        border: 8px solid transparent;
+        border-left-color: #764ba2;
+        border-right: none;
+    }
+    
+    @@keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .bot-message {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        color: #333;
+        padding: 15px 20px;
+        border-radius: 20px 20px 20px 5px;
+        margin: 15px 25% 15px 0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        animation: slideInLeft 0.4s ease-out;
+        word-wrap: break-word;
+        position: relative;
+        border-left: 4px solid #667eea;
+    }
+    
+    .bot-message::before {
+        content: '';
+        position: absolute;
+        left: -8px;
+        bottom: 10px;
+        width: 0;
+        height: 0;
+        border: 8px solid transparent;
+        border-right-color: #c3cfe2;
+        border-left: none;
+    }
+    
+    .chat-footer {
+        background: white;
+        padding: 20px 25px;
+        border-top: 1px solid rgba(102, 126, 234, 0.1);
+    }
+    
+    .input-group {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    
+    .message-input {
+        flex: 1;
+        padding: 15px 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 25px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: #f8f9ff;
+        outline: none;
+    }
+    
+    .message-input:focus {
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .send-button {
+        padding: 15px 35px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .send-button::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    
+    .send-button:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .send-button:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    }
+    
+    .send-button:active {
+        transform: translateY(-1px) scale(1.02);
+    }
+    
+    .send-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .send-button i {
+        transition: transform 0.3s ease;
+    }
+    
+    .send-button:hover i {
+        transform: translateX(3px);
+    }
+    
+    /* History Side Panel */
+    .history-panel {
+        position: fixed;
+        top: 0;
+        right: -400px;
+        width: 400px;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(10px);
+        box-shadow: -5px 0 20px rgba(0, 0, 0, 0.2);
+        transition: right 0.3s ease;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .history-panel.open {
+        right: 0;
+    }
+    
+    .history-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .history-header h3 {
+        margin: 0;
+        font-size: 1.3rem;
+    }
+    
+    .history-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 5px 10px;
+        border-radius: 5px;
+        transition: background 0.3s;
+    }
+    
+    .history-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .history-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+    }
+    
+    .history-item {
+        margin-bottom: 15px;
+        padding: 12px;
+        border-radius: 10px;
+        background: #f5f5f5;
+        border-left: 3px solid #667eea;
+    }
+    
+    .history-item.user {
+        background: #e3f2fd;
+        border-left-color: #2196f3;
+        margin-left: 20px;
+    }
+    
+    .history-item.bot {
+        background: #f1f8e9;
+        border-left-color: #8bc34a;
+        margin-right: 20px;
+    }
+    
+    .history-message {
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: #333;
+    }
+    
+    .history-time {
+        font-size: 0.75rem;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .history-empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: #999;
+    }
+    
+    .history-loading {
+        text-align: center;
+        padding: 20px;
+        color: #667eea;
+    }
+    
+    .history-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 999;
+        display: none;
+        transition: opacity 0.3s;
+    }
+    
+    .history-overlay.show {
+        display: block;
+    }
+    
+    @@media (max-width: 768px) {
+        .history-panel {
+            width: 100%;
+            right: -100%;
+        }
+        
+        .user-message {
+            margin-left: 10%;
+        }
+        
+        .bot-message {
+            margin-right: 10%;
+        }
+        
+        .chat-header h3 {
+            font-size: 1.5rem;
+        }
+        
+        .chat-messages {
+            height: 400px;
+        }
+    }
+</style>
+
+<!-- Login/Register Buttons -->
+<div id="authButtons" class="auth-buttons">
+    <button class="auth-btn login" onclick="showLoginModal()">Login</button>
+    <button class="auth-btn register" onclick="showRegisterModal()">Register</button>
+</div>
+
+<!-- User Info (shown when logged in) -->
+<div id="userInfo" class="user-info" style="display: none;">
+    <span id="userNameDisplay"></span>
+    <button class="auth-btn history" onclick="toggleHistoryPanel()" title="View Chat History">📜 History</button>
+    <button class="auth-btn logout" onclick="handleLogout()">Logout</button>
+</div>
+
+<!-- History Side Panel -->
+<div id="historyOverlay" class="history-overlay" onclick="toggleHistoryPanel()"></div>
+<div id="historyPanel" class="history-panel">
+    <div class="history-header">
+        <h3>📜 Chat History</h3>
+        <button class="history-close" onclick="toggleHistoryPanel()">&times;</button>
+    </div>
+    <div id="historyContent" class="history-content">
+        <div class="history-loading">Loading history...</div>
+    </div>
+</div>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeLoginModal()">&times;</button>
+        <div class="modal-header">
+            <h2>Login</h2>
+        </div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" required>
+            </div>
+            <div id="loginError" class="error-message"></div>
+            <div id="loginSuccess" class="success-message"></div>
+            <button type="submit" class="modal-btn primary">Login</button>
+        </form>
+        <button class="modal-btn secondary" onclick="closeLoginModal(); showRegisterModal();" style="margin-top: 10px;">
+            Don't have an account? Register
+        </button>
+    </div>
+</div>
+
+<!-- Register Modal -->
+<div id="registerModal" class="modal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeRegisterModal()">&times;</button>
+        <div class="modal-header">
+            <h2>Register</h2>
+        </div>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="registerName">Name</label>
+                <input type="text" id="registerName" required>
+            </div>
+            <div class="form-group">
+                <label for="registerEmail">Email</label>
+                <input type="email" id="registerEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">Password</label>
+                <input type="password" id="registerPassword" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="registerConfirmPassword">Confirm Password</label>
+                <input type="password" id="registerConfirmPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="registerAge">Age (Optional)</label>
+                <input type="number" id="registerAge" min="1" max="120">
+            </div>
+            <div class="form-group">
+                <label for="registerPhone">Phone (Optional)</label>
+                <input type="tel" id="registerPhone">
+            </div>
+            <div class="form-group">
+                <label for="registerAddress">Address (Optional)</label>
+                <input type="text" id="registerAddress">
+            </div>
+            <div id="registerError" class="error-message" style="display: none;"></div>
+            <div id="registerSuccess" class="success-message" style="display: none;"></div>
+            <button type="submit" class="modal-btn primary">Register</button>
+        </form>
+        <button class="modal-btn secondary" onclick="closeRegisterModal(); showLoginModal();" style="margin-top: 10px;">
+            Already have an account? Login
+        </button>
+    </div>
+</div>
+
+<div class="chatbot-container">
+    <div class="chat-card">
+        <div class="chat-header">
+            <i class="fas fa-heartbeat icon"></i>
+            <h3>Doctor Koi?</h3>
+            <p>Your AI Health Assistant</p>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <strong>👋 Hello!</strong> I'm Doctor Koi, your AI health assistant. How can I help you today?
+            </div>
+        </div>
+        
+        <div class="chat-footer">
+            <div class="input-group">
+                <input type="text" 
+                       id="messageInput" 
+                       class="message-input" 
+                       placeholder="Type your message here..."
+                       autocomplete="off">
+                <button type="button" 
+                        id="sendButton" 
+                        class="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Send</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('messageInput');
+    const button = document.getElementById('sendButton');
+    const messagesContainer = document.getElementById('chatMessages');
+    
+    if (!input || !button || !messagesContainer) {
+        console.error('Required elements not found');
+        return;
+    }
+    
+    // Initialize MongoDB database on page load (creates database if it doesn't exist)
+    async function initializeDatabase() {
+        try {
+            const response = await fetch('/Account/InitializeDatabase', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const result = await response.json();
+            if (result.success) {
+                console.log('✅ MongoDB database initialized:', result.message);
+            } else {
+                console.warn('⚠️ Database initialization:', result.errors?.[0] || 'Unknown error');
+            }
+        } catch (error) {
+            console.warn('⚠️ Could not initialize database (MongoDB may not be running):', error.message);
+        }
+    }
+    
+    // Initialize database in the background (non-blocking)
+    initializeDatabase();
+    
+    // Check if redirected from payment page with success
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('paymentSuccess') === 'true') {
+        console.log('Payment success detected in URL, loading chat history...');
+        setTimeout(() => {
+            loadChatHistory();
+        }, 500);
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    function addMessage(text, isUser) {
+        const div = document.createElement('div');
+        div.className = isUser ? 'user-message' : 'bot-message';
+        div.innerHTML = text.replace(/\n/g, '<br>');
+        messagesContainer.appendChild(div);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+    
+    async function loadChatHistory() {
+        try {
+            console.log('Loading chat history...');
+            const response = await fetch('/api/Chat/history');
+            if (response.ok) {
+                const messages = await response.json();
+                console.log('Loaded messages:', messages.length);
+                messagesContainer.innerHTML = '';
+                if (messages.length === 0) {
+                    messagesContainer.innerHTML = '<div class="welcome-message"><strong>👋 Hello!</strong> I\'m Doctor Koi, your AI health assistant. How can I help you today?</div>';
+                } else {
+                    messages.forEach(msg => {
+                        addMessage(msg.message, msg.isFromUser);
+                    });
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            } else if (response.status === 401) {
+                // User not logged in - show welcome message
+                console.log('User not logged in, showing welcome message');
+                messagesContainer.innerHTML = '<div class="welcome-message"><strong>👋 Hello!</strong> I\'m Doctor Koi, your AI health assistant. How can I help you today?</div>';
+            } else {
+                console.error('Failed to load chat history:', response.status);
+                messagesContainer.innerHTML = '<div class="welcome-message"><strong>👋 Hello!</strong> I\'m Doctor Koi, your AI health assistant. How can I help you today?</div>';
+            }
+        } catch (error) {
+            console.error('Error loading chat history:', error);
+            messagesContainer.innerHTML = '<div class="welcome-message"><strong>👋 Hello!</strong> I\'m Doctor Koi, your AI health assistant. How can I help you today?</div>';
+        }
+    }
+    
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'payment-success') {
+            console.log('Payment success message received on page load');
+            setTimeout(() => {
+                loadChatHistory();
+            }, 500);
+        }
+    });
+    
+    async function sendMessage() {
+        const text = input.value.trim();
+        if (!text) return;
+        
+        input.disabled = true;
+        button.disabled = true;
+        
+        addMessage(text, true);
+        input.value = '';
+        
+        try {
+            const response = await fetch('/api/Chat/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: text })
+            });
+            
+            if (!response.ok) {
+                let errorMessage = 'Server error';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorData.message || `Error ${response.status}`;
+                } catch {
+                    errorMessage = `Error ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(errorMessage);
+            }
+            
+            const data = await response.json();
+            console.log('=== FULL RESPONSE DATA ===');
+            console.log(JSON.stringify(data, null, 2));
+            console.log('Appointment ID:', data.appointmentId, 'Type:', typeof data.appointmentId);
+            console.log('Doctor Info:', data.doctorInfo);
+            console.log('==========================');
+            
+            if (data.message) {
+                addMessage(data.message, false);
+            } else {
+                addMessage('I received your message but have no response.', false);
+            }
+            
+            // Check if appointment was created and redirect to Stripe checkout
+            const appointmentId = data.appointmentId;
+            const doctorInfo = data.doctorInfo;
+            
+            if (appointmentId && appointmentId !== 0 && appointmentId !== null && appointmentId !== undefined && 
+                doctorInfo && doctorInfo !== null && doctorInfo !== undefined) {
+                
+                console.log('Appointment created - redirecting to Stripe checkout');
+                console.log('Appointment ID:', appointmentId);
+                console.log('Doctor Info:', doctorInfo);
+                
+                const appointmentIdNum = parseInt(appointmentId);
+                if (isNaN(appointmentIdNum) || appointmentIdNum <= 0) {
+                    console.error('Invalid appointmentId format:', appointmentId);
+                    addMessage('❌ Error: Invalid appointment ID. Please try again.', false);
+                    return;
+                }
+                
+                // Get amount from doctorInfo or use default
+                const amount = doctorInfo.fee || doctorInfo.consultationFee || 0;
+                
+                if (amount <= 0) {
+                    console.error('Invalid amount:', amount);
+                    addMessage('❌ Error: Invalid payment amount. Please try again.', false);
+                    return;
+                }
+                
+                // User is already logged in (checked before doctor suggestion), proceed with payment
+                addMessage('🔄 Redirecting to secure payment...', false);
+                
+                // Create checkout session and redirect
+                createCheckoutAndRedirect(appointmentIdNum, amount);
+            }
+        } catch (error) {
+            console.error('Error details:', error);
+            const errorMsg = error.message || 'Unknown error occurred';
+            addMessage('❌ ' + errorMsg, false);
+            // Error is already shown in chat message, no alert needed
+        } finally {
+            input.disabled = false;
+            button.disabled = false;
+            input.focus();
+        }
+    }
+    
+    // Function to create checkout session and redirect to Stripe
+    async function createCheckoutAndRedirect(appointmentId, amount) {
+        try {
+            console.log('Creating checkout session for appointment:', appointmentId, 'amount:', amount);
+            
+            const response = await fetch('/Payment/create-checkout-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    amount: amount,
+                    appointmentId: appointmentId
+                })
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error creating checkout session:', errorText);
+                let errorData;
+                try {
+                    errorData = JSON.parse(errorText);
+                } catch {
+                    errorData = { error: errorText || 'Failed to create checkout session' };
+                }
+                addMessage('❌ Payment error: ' + (errorData.error || 'Failed to initialize payment'), false);
+                return;
+            }
+            
+            const data = await response.json();
+            console.log('Checkout session created:', data);
+            
+            if (!data || !data.url) {
+                console.error('No checkout URL received');
+                addMessage('❌ Error: Could not initialize payment. Please try again.', false);
+                return;
+            }
+            
+            console.log('Redirecting to Stripe Checkout:', data.url);
+            
+            // Redirect to Stripe Checkout
+            window.location.href = data.url;
+            
+        } catch (error) {
+            console.error('Error in createCheckoutAndRedirect:', error);
+            addMessage('❌ Error: ' + error.message, false);
+        }
+    }
+    
+    button.addEventListener('click', sendMessage);
+    
+    input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+    
+    input.focus();
+    
+    // Check login status on page load
+    checkLoginStatus();
+});
+
+// Authentication Functions
+function showLoginModal() {
+    document.getElementById('loginModal').classList.add('show');
+    const errorDiv = document.getElementById('loginError');
+    const successDiv = document.getElementById('loginSuccess');
+    errorDiv.textContent = '';
+    successDiv.textContent = '';
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+}
+
+function closeLoginModal() {
+    document.getElementById('loginModal').classList.remove('show');
+    document.getElementById('loginForm').reset();
+}
+
+function showRegisterModal() {
+    document.getElementById('registerModal').classList.add('show');
+    const errorDiv = document.getElementById('registerError');
+    const successDiv = document.getElementById('registerSuccess');
+    errorDiv.textContent = '';
+    successDiv.textContent = '';
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+}
+
+function closeRegisterModal() {
+    document.getElementById('registerModal').classList.remove('show');
+    document.getElementById('registerForm').reset();
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const loginModal = document.getElementById('loginModal');
+    const registerModal = document.getElementById('registerModal');
+    if (event.target == loginModal) {
+        closeLoginModal();
+    }
+    if (event.target == registerModal) {
+        closeRegisterModal();
+    }
+}
+
+// Login Form Handler
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const errorDiv = document.getElementById('loginError');
+    const successDiv = document.getElementById('loginSuccess');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    errorDiv.textContent = '';
+    successDiv.textContent = '';
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    
+    // Disable button during request
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Logging in...';
+    }
+    
+    try {
+        console.log('Attempting login for:', email);
+        const response = await fetch('/Account/Login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ email, password, rememberMe: false })
+        });
+        
+        console.log('Login response status:', response.status);
+        console.log('Login response content-type:', response.headers.get('content-type'));
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Non-JSON response received:', text.substring(0, 200));
+            errorDiv.textContent = '❌ Server error: Invalid response format. Please check if MongoDB is running.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        
+        const data = await response.json();
+        console.log('Login response data:', data);
+        
+        if (data.success) {
+            successDiv.textContent = '✅ ' + (data.message || 'Login successful!');
+            successDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+            
+            // Clear any error messages in login modal
+            const loginErrorDiv = document.getElementById('loginError');
+            if (loginErrorDiv) {
+                loginErrorDiv.style.display = 'none';
+            }
+            
+            // Update UI status first
+            await checkLoginStatus();
+            
+            // Normal login - just close modal
+            setTimeout(() => {
+                closeLoginModal();
+                // Success message is shown in the modal, no alert needed
+            }, 1500);
+        } else {
+            errorDiv.textContent = '❌ ' + (data.errors ? data.errors.join(', ') : 'Login failed');
+            errorDiv.style.display = 'block';
+            successDiv.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        errorDiv.textContent = '❌ Error: ' + error.message;
+        errorDiv.style.display = 'block';
+        successDiv.style.display = 'none';
+    } finally {
+        // Re-enable button
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Login';
+        }
+    }
+});
+
+// Register Form Handler
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('registerConfirmPassword').value;
+    const errorDiv = document.getElementById('registerError');
+    const successDiv = document.getElementById('registerSuccess');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    errorDiv.textContent = '';
+    successDiv.textContent = '';
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    
+    if (password !== confirmPassword) {
+        errorDiv.textContent = '❌ Passwords do not match';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    const formData = {
+        name: document.getElementById('registerName').value,
+        email: document.getElementById('registerEmail').value,
+        password: password,
+        confirmPassword: confirmPassword,
+        age: document.getElementById('registerAge').value ? parseInt(document.getElementById('registerAge').value) : null,
+        phoneNumber: document.getElementById('registerPhone').value || null,
+        address: document.getElementById('registerAddress').value || null
+    };
+    
+    // Disable button during request
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Registering...';
+    }
+    
+    try {
+        console.log('Attempting registration for:', formData.email);
+        const response = await fetch('/Account/Register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        console.log('Register response status:', response.status);
+        console.log('Register response content-type:', response.headers.get('content-type'));
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Non-JSON response received:', text.substring(0, 200));
+            errorDiv.textContent = '❌ Server error: Invalid response format. Please check if MongoDB is running.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        
+        const data = await response.json();
+        console.log('Register response data:', data);
+        
+        if (data.success) {
+            successDiv.textContent = '✅ ' + (data.message || 'Registration successful!');
+            successDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+            
+            // Clear any error messages in register modal
+            const registerErrorDiv = document.getElementById('registerError');
+            if (registerErrorDiv) {
+                registerErrorDiv.style.display = 'none';
+            }
+            
+            // Update UI status first
+            await checkLoginStatus();
+            
+            // Normal registration - just close modal
+            setTimeout(() => {
+                closeRegisterModal();
+                // Success message is shown in the modal, no alert needed
+            }, 1500);
+        } else {
+            errorDiv.textContent = '❌ ' + (data.errors ? data.errors.join(', ') : 'Registration failed');
+            errorDiv.style.display = 'block';
+            successDiv.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        errorDiv.textContent = '❌ Error: ' + error.message;
+        errorDiv.style.display = 'block';
+        successDiv.style.display = 'none';
+    } finally {
+        // Re-enable button
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Register';
+        }
+    }
+});
+
+// Check if user is logged in (synchronous check based on UI state)
+async function checkIfLoggedIn() {
+    try {
+        const response = await fetch('/Account/GetCurrentUser');
+        const data = await response.json();
+        return data.isLoggedIn === true;
+    } catch (error) {
+        console.error('Error checking login status:', error);
+        return false;
+    }
+}
+
+// Check Login Status
+async function checkLoginStatus() {
+    try {
+        const response = await fetch('/Account/GetCurrentUser');
+        const data = await response.json();
+        
+        if (data.isLoggedIn) {
+            document.getElementById('authButtons').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'flex';
+            document.getElementById('userNameDisplay').textContent = `👤 ${data.name || data.email}`;
+        } else {
+            document.getElementById('authButtons').style.display = 'flex';
+            document.getElementById('userInfo').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error checking login status:', error);
+    }
+}
+
+// Logout Handler
+async function handleLogout() {
+    try {
+        const response = await fetch('/Account/Logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            checkLoginStatus();
+            // Close history panel if open
+            if (document.getElementById('historyPanel').classList.contains('open')) {
+                toggleHistoryPanel();
+            }
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+}
+
+// History Panel Functions
+function toggleHistoryPanel() {
+    const panel = document.getElementById('historyPanel');
+    const overlay = document.getElementById('historyOverlay');
+    
+    if (panel.classList.contains('open')) {
+        panel.classList.remove('open');
+        overlay.classList.remove('show');
+    } else {
+        // Check if user is logged in before opening
+        checkIfLoggedIn().then(isLoggedIn => {
+            if (isLoggedIn) {
+                panel.classList.add('open');
+                overlay.classList.add('show');
+                loadHistory();
+            } else {
+                // Show login modal if not logged in
+                showLoginModal();
+                const loginErrorDiv = document.getElementById('loginError');
+                if (loginErrorDiv) {
+                    loginErrorDiv.textContent = '⚠️ Please login to view your chat history.';
+                    loginErrorDiv.style.display = 'block';
+                }
+            }
+        });
+    }
+}
+
+async function loadHistory() {
+    const historyContent = document.getElementById('historyContent');
+    if (!historyContent) return;
+    
+    historyContent.innerHTML = '<div class="history-loading">Loading history...</div>';
+    
+    try {
+        const response = await fetch('/api/Chat/history');
+        
+        if (response.status === 401) {
+            historyContent.innerHTML = '<div class="history-empty">Please login to view your chat history.</div>';
+            return;
+        }
+        
+        if (!response.ok) {
+            throw new Error('Failed to load history');
+        }
+        
+        const messages = await response.json();
+        
+        if (messages.length === 0) {
+            historyContent.innerHTML = '<div class="history-empty">No chat history found. Start chatting to see your history here!</div>';
+            return;
+        }
+        
+        let html = '';
+        messages.forEach(msg => {
+            const time = new Date(msg.timestamp).toLocaleString();
+            const messageClass = msg.isFromUser ? 'user' : 'bot';
+            html += `
+                <div class="history-item ${messageClass}">
+                    <p class="history-message">${escapeHtml(msg.message)}</p>
+                    <div class="history-time">${time}</div>
+                </div>
+            `;
+        });
+        
+        historyContent.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading history:', error);
+        historyContent.innerHTML = '<div class="history-empty">Error loading history. Please try again.</div>';
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
